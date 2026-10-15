@@ -76,9 +76,11 @@ const Q=[
 ["Which was the first artificial satellite?",["Explorer 1","Sputnik 1","Voyager 1","Hubble"],1]
 ];
 const $=id=>document.getElementById(id);
-let i=0,score=0;
+let i=0,score=0,deck=[];
+const shuffle=a=>{a=[...a];for(let k=a.length-1;k>0;k--){const j=Math.random()*(k+1)|0;[a[k],a[j]]=[a[j],a[k]];}return a;};
+function newDeck(){deck=shuffle(Q).map(([q,o,a])=>{const idx=shuffle(o.map((_,n)=>n));return [q,idx.map(n=>o[n]),idx.indexOf(a)];});}
 function show(){
-  const [q,o]=Q[i];
+  const [q,o]=deck[i];
   $("count").textContent=`Question ${i+1} of ${Q.length}`;
   $("bar").style.width=(i/Q.length*100)+"%";
   $("q").textContent=q;
@@ -87,7 +89,7 @@ function show(){
     const b=document.createElement("button");b.textContent=`${n+1}. ${t}`;b.onclick=()=>pick(n);return b;}));
 }
 function pick(n){
-  const a=Q[i][2],bs=[...$("opts").children];
+  const a=deck[i][2],bs=[...$("opts").children];
   bs.forEach(b=>b.disabled=true);
   bs[a].classList.add("correct");
   if(n===a)score++;else bs[n].classList.add("wrong");
@@ -107,7 +109,8 @@ function finish(){
   $("again").focus();
   $("emoji").textContent=e;$("final").textContent=`${score} / ${Q.length}`;$("msg").textContent=m;
 }
-$("again").onclick=()=>{$("confetti").replaceChildren();i=0;score=0;$("score").textContent=0;$("result").classList.add("hide");$("quiz").classList.remove("hide");show();};
+$("again").onclick=()=>{newDeck();$("confetti").replaceChildren();i=0;score=0;$("score").textContent=0;$("result").classList.add("hide");$("quiz").classList.remove("hide");show();};
+newDeck();
 document.addEventListener("keydown",e=>{
   const n=+e.key;
   const bs=[...$("opts").children];
