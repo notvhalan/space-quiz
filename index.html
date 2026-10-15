@@ -32,6 +32,8 @@ button.wrong{border-color:var(--bad);background:var(--badbg);animation:shake .4s
 .next,.restart{margin-top:18px;width:100%;text-align:center;background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
 .next:hover:not(:disabled){color:#fff;filter:brightness(1.1)}
 .hide{display:none}
+.rating{color:#f59e0b;letter-spacing:2px}
+.rating-empty{color:var(--muted);letter-spacing:0;font-size:13px}
 .result{text-align:center;animation:pop .5s}
 .result.celebrate .emoji{animation:bounce 1s infinite}
 @keyframes bounce{50%{transform:translateY(-12px) rotate(8deg)}}
@@ -49,6 +51,7 @@ button.wrong{border-color:var(--bad);background:var(--badbg);animation:shake .4s
   <h1>🚀 Space Quiz</h1>
   <section id="quiz">
     <div class="top"><span id="count"></span><span class="score">Score: <b id="score">0</b></span></div>
+    <div class="top"><span>Rating</span><span id="rating" data-testid="game-rating"></span></div>
     <div class="bar"><i id="bar"></i></div>
     <h2 id="q" aria-live="polite"></h2>
     <div class="opts" id="opts" role="group" aria-labelledby="q"></div>
@@ -59,6 +62,7 @@ button.wrong{border-color:var(--bad);background:var(--badbg);animation:shake .4s
     <div class="big" id="final"></div>
     <p id="msg"></p>
     <p id="best"></p>
+    <p id="stars" data-testid="result-rating" aria-live="polite"></p>
     <button class="restart" id="again">Play again</button>
   </section>
 </main>
@@ -77,10 +81,11 @@ const Q=[
 ["Which was the first artificial satellite?",["Explorer 1","Sputnik 1","Voyager 1","Hubble"],1]
 ];
 const $=id=>document.getElementById(id);
-let i=0,score=0,deck=[];
+let i=0,score=0,deck=[],starRating=null;
 const shuffle=a=>{a=[...a];for(let k=a.length-1;k>0;k--){const j=Math.random()*(k+1)|0;[a[k],a[j]]=[a[j],a[k]];}return a;};
 function newDeck(){deck=shuffle(Q).map(([q,o,a])=>{const idx=shuffle(o.map((_,n)=>n));return [q,idx.map(n=>o[n]),idx.indexOf(a)];});}
 function show(){
+  renderRating($("rating"));
   const [q,o]=deck[i];
   $("count").textContent=`Question ${i+1} of ${Q.length}`;
   $("bar").style.width=(i/Q.length*100)+"%";
@@ -101,12 +106,19 @@ function pick(n){
   $("next").focus();
 }
 $("next").onclick=()=>{i++;i<Q.length?show():finish();};
+function renderRating(el){
+  if(starRating===null){el.className="rating-empty";el.textContent="No rating yet";el.removeAttribute("aria-label");return;}
+  el.className="rating";el.textContent="★".repeat(starRating)+"☆".repeat(5-starRating);
+  el.setAttribute("aria-label",`${starRating} out of 5 stars`);
+}
 function bestScore(){
   try{const b=Math.max(+localStorage.getItem("spaceQuizBest")||0,score);localStorage.setItem("spaceQuizBest",b);return b;}
   catch{return score;}
 }
 function finish(){
   $("quiz").classList.add("hide");$("result").classList.remove("hide");
+  starRating=Math.round(score/Q.length*5);
+  renderRating($("stars"));$("stars").insertAdjacentText("beforeend",` ${starRating}/5`);
   const p=score/Q.length;
   const [e,m]=p===1?["🏆","Flawless! Mission commander material."]:p>=.8?["🚀","Stellar work, astronaut!"]:p>=.5?["🌍","Solid orbit. Keep exploring!"]:p>=.3?["🛰️","Drifting a bit. Try again!"]:["☄️","Houston, we have a problem."];
   $("result").classList.toggle("celebrate",score>=8);
