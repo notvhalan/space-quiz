@@ -58,6 +58,7 @@ button.wrong{border-color:var(--bad);background:var(--badbg);animation:shake .4s
     <div class="emoji" id="emoji"></div>
     <div class="big" id="final"></div>
     <p id="msg"></p>
+    <p id="best"></p>
     <button class="restart" id="again">Play again</button>
   </section>
 </main>
@@ -100,6 +101,10 @@ function pick(n){
   $("next").focus();
 }
 $("next").onclick=()=>{i++;i<Q.length?show():finish();};
+function bestScore(){
+  try{const b=Math.max(+localStorage.getItem("spaceQuizBest")||0,score);localStorage.setItem("spaceQuizBest",b);return b;}
+  catch{return score;}
+}
 function finish(){
   $("quiz").classList.add("hide");$("result").classList.remove("hide");
   const p=score/Q.length;
@@ -107,7 +112,7 @@ function finish(){
   $("result").classList.toggle("celebrate",score>=8);
   if(score>=8)$("confetti").replaceChildren(...Array.from({length:30},()=>{const s=document.createElement("span");s.textContent=["🎉","⭐","✨","🚀"][Math.random()*4|0];s.style.left=Math.random()*100+"%";s.style.animationDelay=Math.random()*1.5+"s";return s;}));
   $("again").focus();
-  $("emoji").textContent=e;$("final").textContent=`${score} / ${Q.length}`;$("msg").textContent=m;
+  $("emoji").textContent=e;$("final").textContent=`${score} / ${Q.length}`;$("msg").textContent=m;$("best").textContent=`Best score: ${bestScore()} / ${Q.length}`;
 }
 $("again").onclick=()=>{newDeck();$("confetti").replaceChildren();i=0;score=0;$("score").textContent=0;$("result").classList.add("hide");$("quiz").classList.remove("hide");show();};
 newDeck();
